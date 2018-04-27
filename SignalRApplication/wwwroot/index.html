@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SignalR JSON Test</title>
+</head>
+<body>
+    Protocol:
+    <select id="protocol">
+        <option value="json">JSON</option>
+        <option value="messagepack">MessagePack</option>
+    </select>
+    <button type="button" id="connect">Connect</button>
+    <br>
+    Start length:
+    <input type="number" value="10000" id="startLength" />
+    <button type="button" id="start">Start</button>
+    <p>
+        Requested length: <span id="requestedLength">0</span>
+    </p>
+    <p>
+        Response length: <span id="responseLength">0</span>
+    </p>
+
+    <script src="lib/signalr/signalr.js"></script>
+    <script src="lib/msgpack5/msgpack5.js"></script>
+    <script src="lib/signalr/signalr-protocol-msgpack.js"></script>
+
+    <script>
+        (function () {
+            let protocolSelect = document.getElementById("protocol");
+            let connectButton = document.getElementById("connect");
+            let startButton = document.getElementById("start");
+            let startLengthInput = document.getElementById("startLength");
+            let requestedLengthSpan = document.getElementById("requestedLength");
+            let responseLengthSpan = document.getElementById("responseLength");
+
+            let connection;
+
+            connectButton.addEventListener("click", async () => {
+                if (connection && connection.connection.connectionState === 1 /* Connected */)
+                    await connection.stop();
+
+                let protocol;
+                switch (protocolSelect.value) {
+                    case "json":
+                        protocol = new signalR.JsonHubProtocol();
+                        break;
+                    case "messagepack":
+                        protocol = new signalR.protocols.msgpack.MessagePackHubProtocol();
+                        break;
+                }
+
+                connection = new signalR.HubConnection("TestHub", { logger: signalR.LogLevel.Trace, protocol: protocol });
+                await connection.start();
+            });
+
+            startButton.addEventListener("click", async () => {
+                for (let i = startLengthInput.valueAsNumber; true; i += 100) {
+                    requestedLengthSpan.innerText = i;
+                    let data = await connection.invoke("GetData", i);
+                    responseLengthSpan.innerText = data.length;
+                    await sleep(10);
+                }
+            });
+
+            function sleep(ms) {
+                return new Promise((resolve, reject) => setTimeout(resolve, ms));
+            }
+        })();
+    </script>
+</body>
+</html>
