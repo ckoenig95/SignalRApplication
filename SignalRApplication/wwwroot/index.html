@@ -28,12 +28,12 @@
 
     <script>
         (function () {
-            let protocolSelect = document.getElementById("protocol");
-            let connectButton = document.getElementById("connect");
-            let startButton = document.getElementById("start");
-            let startLengthInput = document.getElementById("startLength");
-            let requestedLengthSpan = document.getElementById("requestedLength");
-            let responseLengthSpan = document.getElementById("responseLength");
+            const protocolSelect = document.getElementById("protocol");
+            const connectButton = document.getElementById("connect");
+            const startButton = document.getElementById("start");
+            const startLengthInput = document.getElementById("startLength");
+            const requestedLengthSpan = document.getElementById("requestedLength");
+            const responseLengthSpan = document.getElementById("responseLength");
 
             let connection;
 
@@ -50,15 +50,15 @@
                         protocol = new signalR.protocols.msgpack.MessagePackHubProtocol();
                         break;
                 }
-
-                connection = new signalR.HubConnection("TestHub", { logger: signalR.LogLevel.Trace, protocol: protocol });
+                
+                connection = new signalR.HubConnectionBuilder().withUrl("TestHub").withHubProtocol(protocol).build();
                 await connection.start();
             });
 
             startButton.addEventListener("click", async () => {
                 for (let i = startLengthInput.valueAsNumber; true; i += 100) {
                     requestedLengthSpan.innerText = i;
-                    let data = await connection.invoke("GetData", i);
+                    const data = await connection.invoke("GetData", i);
                     responseLengthSpan.innerText = data.length;
                     await sleep(10);
                 }
